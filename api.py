@@ -19,6 +19,13 @@ CORS(app)
 upcStores = ["walmart", "target", "lowes", "office-depot", "macys", "staples"]
 skuStores = ["cvs", "bjs"]
 
+
+''' jsonify_stores(): turn supported stores into json data
+        returns: json of stores by type'''
+def jsonify_stores():
+    data = {"upcStores": upcStores, "skuStores": skuStores}
+    return {"stores": data}
+
 ''' fetch_brickseed(): fetch inventory levels from brickSeed
         store: store name (for URL)
         itemID: upc or sku
@@ -149,15 +156,13 @@ def searchBy():
 
 @app.route('/getStores')
 def getStores():
-    return render_template('getStores.html', upcStores=upcStores, skuStores=skuStores)
+    return jsonify(jsonify_stores())
 
 @app.route('/getProducts', methods=['GET'])
 def get_products():
     jsonify_products(pull_products)
 
-products = pull_products()
-
-
+#products = pull_products()
 
 
 if __name__ == "__main__":
