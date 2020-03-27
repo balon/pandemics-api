@@ -58,7 +58,7 @@ def fetch_brickseed(store, itemID, idType, zipCode):
 ''' parse_HTML(): fetch inventory levels from brickSeed
         store: store name
         results: html table'''
-def parse_HTML(store, results):
+def parse_HTML(store, results, itemID, itemType):
     inventoryByStore = {}       # master list for storinng data
  
     if results is None:
@@ -66,15 +66,15 @@ def parse_HTML(store, results):
 
     # parse out store information and stock information    
     tree = html.fromstring(str(results))
-    stores = tree.xpath('//strong[@class="address-location-name"]/text()')
+    storeName = tree.xpath('//strong[@class="address-location-name"]/text()')
     address = tree.xpath('//address[@class="address"]/text()')
     stock = tree.xpath('//span[@class="availability-status-indicator__text"]/text()')
     dollars = tree.xpath('//span[@class="price-formatted__dollars"]/text()')
     cents = tree.xpath('//span[@class="price-formatted__cents"]/text()')
 
-    inventLevels = {}
     ct = 0
-    for entry in stores:
+    stores = []
+    for entry in storeName:
         try:   
             storeAddress = address[(ct * 4)].strip() + ", " + address[(ct * 4) + 1].strip()
         except:
@@ -88,7 +88,8 @@ def parse_HTML(store, results):
         except:
             lat = 0.00
             lon = 0.00
-        locationData = {"Address:": storeAddress, "Latitude": lat, "Longitude": lon}
+        
+        locationData = {"Address": storeAddress, "Latitude": lat, "Longitude": lon}
         
         try:
             storeStock = stock[ct].strip()
@@ -100,13 +101,12 @@ def parse_HTML(store, results):
         except:
             itemPrice = "Unknown"
         
-        storeData = {"Location": locationData, "Stock": storeStock, "Price": itemPrice}
-        inventLevels.update( {entry.strip(): storeData} )
+        storeData = {"Name": entry.strip(), "Location": locationData, "Stock": storeStock, "Price": itemPrice}
+        stores.append({"store": storeData})
         ct += 1
 
-    inventoryByStore.update( {store: inventLevels})
-
-    return inventoryByStore
+    inventoryByStore.update( {"stores": stores, "store_type": store, "itemID": itemID, "itemType": itemType})
+    return {"inventory": inventoryByStore}
 
 
 ''' pull_products(): fetch products from google
@@ -150,7 +150,7 @@ def searchBy():
   print("API Requested: " + method, store, itemCode, zipCode)
 
   htmlRequested = fetch_brickseed(store, itemCode, method, zipCode)
-  decodedHtml = parse_HTML(store, htmlRequested)
+  decodedHtml = parse_HTML(store, htmlRequested, itemCode, method)
 
   return jsonify(decodedHtml)
 
