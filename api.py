@@ -9,22 +9,22 @@ from flask import Flask
 from flask import request
 from flask import render_template
 from flask import jsonify
-
-# api future:
-# /searchBy?method=upc&store=walmart&itemCode=044600301129&zipCode=06516
+from flask_cors import CORS
+import pandas as pd
 
 app = Flask(__name__)
+CORS(app)
 
 # supported stores to query
 upcStores = ["walmart", "target", "lowes", "office-depot", "macys", "staples"]
 skuStores = ["cvs", "bjs"]
 
-''' fetchBrickseed(): fetch inventory levels from brickSeed
+''' fetch_brickseed(): fetch inventory levels from brickSeed
         store: store name (for URL)
         itemID: upc or sku
         idType: upc or sku
         zipCode: user zipCode'''
-def fetchBrickseed(store, itemID, idType, zipCode):
+def fetch_brickseed(store, itemID, idType, zipCode):
     data = {
     'zip': zipCode,
     'method': idType
@@ -48,11 +48,10 @@ def fetchBrickseed(store, itemID, idType, zipCode):
     return soup.find(class_="table__body")
 
 
-
-''' parseHTML(): fetch inventory levels from brickSeed
+''' parse_HTML(): fetch inventory levels from brickSeed
         store: store name
         results: html table'''
-def parseHTML(store, results):
+def parse_HTML(store, results):
     inventoryByStore = {}       # master list for storinng data
  
     if results is None:
@@ -102,6 +101,39 @@ def parseHTML(store, results):
 
     return inventoryByStore
 
+
+''' pull_products(): fetch products from google
+        returns: pandas df of products'''
+def pull_products():
+    r = requests.get('https://docs.google.com/spreadsheets/d/e/2PACX-1vRe_QmwymRZxRRwBaaBnJ4fbAqRxPxvznAwX0Of30eZC9bH93DaxoyRfNzUL5LMRSBiju47eFQHR_om/pubhtml/sheet?headers=false&gid=951415249&single=true&range=B:F')
+    soup = BeautifulSoup(r.text, 'lxml')
+    tbody = soup.find('tbody')
+    parsed_columns = tbody.find_all('tr')[0]
+
+    # get column names from data source
+    df_columns = []
+    for column in parsed_columns.find_all('td'):
+        df_columns.append(column.text)
+
+    # get data columns from data source
+    raw_rows = tbody.find_all('tr')[2:]
+    rows = []
+    for row in raw_rows:
+        tds = row.find_all('td')
+        product_names = tds[0].text
+        product_categories = tds[1].text
+        product_details = tds[2].text
+        product_upcs = tds[3].text
+        product_skus = tds[4].text
+        rows.append((product_names, product_categories, product_details, product_upcs, product_skus))
+
+    return pd.DataFrame(rows, columns=df_columns)
+
+''' jsonify_products(): convert products df -> json
+        returns: json of products'''
+def jsonify_products(products):
+    exit(1)
+
 @app.route('/searchBy', methods=['GET'])
 def searchBy():
   method = request.args.get('method')
@@ -110,8 +142,8 @@ def searchBy():
   zipCode = request.args.get('zipCode')
   print("API Requested: " + method, store, itemCode, zipCode)
 
-  htmlRequested = fetchBrickseed(store, itemCode, method, zipCode)
-  decodedHtml = parseHTML(store, htmlRequested)
+  htmlRequested = fetch_frickseed(store, itemCode, method, zipCode)
+  decodedHtml = parse_HTML(store, htmlRequested)
 
   return jsonify(decodedHtml)
 
@@ -119,5 +151,14 @@ def searchBy():
 def getStores():
     return render_template('getStores.html', upcStores=upcStores, skuStores=skuStores)
 
+@app.route('/getProducts', methods=['GET'])
+def get_products():
+    jsonify_products(pull_products)
+
+products = pull_products()
+
+
+
+
 if __name__ == "__main__":
-        app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0')
