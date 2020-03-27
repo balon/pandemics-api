@@ -149,7 +149,7 @@ def searchBy():
   zipCode = request.args.get('zipCode')
   print("API Requested: " + method, store, itemCode, zipCode)
 
-  htmlRequested = fetch_frickseed(store, itemCode, method, zipCode)
+  htmlRequested = fetch_brickseed(store, itemCode, method, zipCode)
   decodedHtml = parse_HTML(store, htmlRequested)
 
   return jsonify(decodedHtml)
