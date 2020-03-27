@@ -142,7 +142,7 @@ def jsonify_products(products):
     exit(1)
 
 @app.route('/searchInventory', methods=['GET'])
-def searchBy():
+def searchInventory():
   method = request.args.get('method')
   store = request.args.get('store')
   itemCode = request.args.get('itemCode')
