@@ -217,7 +217,7 @@ def searchProducts():
 def get_products():
     return jsonify(product_details(pull_products()))
 
-@app.route('/loaderio-02bef853ecf78d8b5bf4cb631636e5a3')
+@app.route('/loaderio-02bef853ecf78d8b5bf4cb631636e5a3/')
 def loader():
     return render_template('loaderio-02bef853ecf78d8b5bf4cb631636e5a3.txt')
 
