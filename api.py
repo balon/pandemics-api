@@ -109,7 +109,7 @@ def parse_HTML(store, results, itemID, itemType):
 ''' pull_products(): fetch products from google
         returns: pandas df of products'''
 def pull_products():
-    r = requests.get('https://docs.google.com/spreadsheets/d/e/2PACX-1vRe_QmwymRZxRRwBaaBnJ4fbAqRxPxvznAwX0Of30eZC9bH93DaxoyRfNzUL5LMRSBiju47eFQHR_om/pubhtml/sheet?headers=false&gid=951415249&single=true&range=B:F')
+    r = requests.get('https://docs.google.com/spreadsheets/d/e/2PACX-1vRe_QmwymRZxRRwBaaBnJ4fbAqRxPxvznAwX0Of30eZC9bH93DaxoyRfNzUL5LMRSBiju47eFQHR_om/pubhtml/sheet?headers=false&gid=951415249&single=true&range=B:E')
     soup = BeautifulSoup(r.text, 'lxml')
     tbody = soup.find('tbody')
     parsed_columns = tbody.find_all('tr')[0]
@@ -128,8 +128,7 @@ def pull_products():
         product_categories = tds[1].text
         product_details = tds[2].text
         product_upcs = tds[3].text
-        product_skus = tds[4].text
-        rows.append((product_names, product_categories, product_details, product_upcs, product_skus))
+        rows.append((product_names, product_categories, product_details, product_upcs))
 
     return pd.DataFrame(rows, columns=df_columns)
 
@@ -166,9 +165,8 @@ def product_details(products):
             fbrand = format_text(brand) 
             brand_details.append({"brand_details": {"brand": brand, "f_brand": fbrand}})
 
-        category_details = {"category": category,"fcategory": fcategory}        
+        category_details = {"category": category,"f_category": fcategory}        
         product_details.append({"details": {"category_details": category_details, "brands": brand_details}})
-
     return {"product_details": product_details}
     
 
@@ -183,7 +181,7 @@ def product_list(df, category, brand):
     products = []
     for product in df.iterrows():
         product = product[1]
-        product_details = {"Name": product['product_name'], "UPC": product['product_upc'], "SKU": product['product_sku']}
+        product_details = {"Name": product['product_name'], "UPC": product['product_upc']}
         products.append({"product": product_details})
     
     return {"product_list": {"category": category, "brand": brand, "products": products}}
@@ -201,7 +199,6 @@ def searchInventory():
 
   htmlRequested = fetch_brickseed(store, itemCode, method, zipCode)
   decodedHtml = parse_HTML(store, htmlRequested, itemCode, method)
-
   return jsonify(decodedHtml)
 
 @app.route('/getStores')
@@ -219,7 +216,6 @@ def searchProducts():
 @app.route('/getProducts', methods=['GET'])
 def get_products():
     return jsonify(product_details(pull_products()))
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
