@@ -136,7 +136,9 @@ def pull_products():
 
     return pd.DataFrame(rows, columns=df_columns)
 
-
+''' format_text: format the string
+        text: string
+        returns: formatted string'''
 def format_text(text):
     if "misc" in text:
         text = text.replace('_misc', ' ').title() + '(Misc)'
@@ -173,14 +175,32 @@ def product_details(products):
     return {"product_details": product_details}
     
 
+''' product_list: return json of products from category and brand
+        df: df
+        category: the category to search for
+        brand: the brand to search for
+        returns: json data'''
+def product_list(df, category, brand):
+    df = df[(df['product_category'] == category) & (df['product_brand'] == brand)]
+    
+    products = []
+    for product in df.iterrows():
+        product = product[1]
+        product_details = {"Name": product['product_name'], "UPC": product['product_upc'], "SKU": product['product_sku']}
+        products.append({"product": product_details})
+    
+    return {"product_list": {"category": category, "brand": brand, "products": products}}
 
+
+
+''' Flask Handling '''
 @app.route('/searchInventory', methods=['GET'])
 def searchInventory():
   method = request.args.get('method')
   store = request.args.get('store')
   itemCode = request.args.get('itemCode')
   zipCode = request.args.get('zipCode')
-  print("API Requested: " + method, store, itemCode, zipCode)
+  print("InventoryAPI Requested: " + method, store, itemCode, zipCode)
 
   htmlRequested = fetch_brickseed(store, itemCode, method, zipCode)
   decodedHtml = parse_HTML(store, htmlRequested, itemCode, method)
@@ -195,13 +215,14 @@ def getStores():
 def searchProducts():
     category = request.args.get('category')
     brand = request.args.get('brand')
+    print("ProductAPI Requested: " + category, brand)
 
+    return jsonify(product_list(pull_products(), category, brand))
 
 @app.route('/getProducts', methods=['GET'])
 def get_products():
     return jsonify(product_details(pull_products()))
 
-product_details(pull_products())
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
