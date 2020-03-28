@@ -136,10 +136,43 @@ def pull_products():
 
     return pd.DataFrame(rows, columns=df_columns)
 
-''' jsonify_products(): convert products df -> json
-        returns: json of products'''
-def jsonify_products(products):
-    exit(1)
+
+def format_text(text):
+    if "misc" in text:
+        text = text.replace('_misc', ' ').title() + '(Misc)'
+        
+        if "_" in text:
+            text = ' '.join(text.split('_'))
+    elif "_" in text:
+        text = ' '.join(text.split('_')).title()
+        
+        if " N " in text:
+            text = text.replace(' N ', ' & ')
+    else:
+        text = text.title()
+
+    return text
+
+''' product_details: return json of products and brands
+        products: df
+        returns: json data'''
+def product_details(products):
+    product_details = []
+    for details in products.groupby(['product_category']):
+        category = details[0]
+        fcategory = format_text(category)
+
+        brand_details = []
+        for brand in details[1]['product_brand'].unique():
+            fbrand = format_text(brand) 
+            brand_details.append({"brand_details": {"brand": brand, "f_brand": fbrand}})
+
+        category_details = {"category": category,"fcategory": fcategory}        
+        product_details.append({"details": {"category_details": category_details, "brands": brand_details}})
+
+    return {"product_details": product_details}
+    
+
 
 @app.route('/searchInventory', methods=['GET'])
 def searchInventory():
@@ -158,12 +191,17 @@ def searchInventory():
 def getStores():
     return jsonify(jsonify_stores())
 
+@app.route('/searchProducts', methods=['GET'])
+def searchProducts():
+    category = request.args.get('category')
+    brand = request.args.get('brand')
+
+
 @app.route('/getProducts', methods=['GET'])
 def get_products():
-    jsonify_products(pull_products)
+    return jsonify(product_details(pull_products()))
 
-#products = pull_products()
-
+product_details(pull_products())
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
