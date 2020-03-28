@@ -16,15 +16,12 @@ app = Flask(__name__)
 CORS(app)
 
 # supported stores to query
-upcStores = ["walmart", "target", "lowes", "office-depot", "macys", "staples"]
-skuStores = ["cvs", "bjs"]
-
+supportedStores = ["walmart", "target", "lowes", "office-depot", "macys", "staples"]
 
 ''' jsonify_stores(): turn supported stores into json data
         returns: json of stores by type'''
 def jsonify_stores():
-    data = {"upcStores": upcStores, "skuStores": skuStores}
-    return {"stores": data}
+    return {"stores": supportedStores}
 
 ''' fetch_brickseed(): fetch inventory levels from brickSeed
         store: store name (for URL)
