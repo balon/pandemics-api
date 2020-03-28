@@ -17,6 +17,8 @@ CORS(app)
 
 # supported stores to query
 supportedStores = ["walmart", "target", "lowes", "office-depot", "macys", "staples"]
+last_pull_products = None
+products_data = None
 
 ''' jsonify_stores(): turn supported stores into json data
         returns: json of stores by type'''
@@ -109,6 +111,24 @@ def parse_HTML(store, results, itemID, itemType):
 ''' pull_products(): fetch products from google
         returns: pandas df of products'''
 def pull_products():
+    # caching
+    global last_pull_products
+    global products_data
+
+    if last_pull_products == None:
+        last_pull_products = time.time()
+    else:
+        current_time = time.time()
+        print(current_time - last_pull_products)
+
+        # check for new products every 6 hours
+        if ((current_time - last_pull_products) < 21600):
+            print("[ProductAPI] Used cache for products")
+            return products_data
+    
+        last_pull_products = current_time
+    print("[ProductAPI] Downloaded fresh products data")
+    
     r = requests.get('https://docs.google.com/spreadsheets/d/e/2PACX-1vRe_QmwymRZxRRwBaaBnJ4fbAqRxPxvznAwX0Of30eZC9bH93DaxoyRfNzUL5LMRSBiju47eFQHR_om/pubhtml/sheet?headers=false&gid=951415249&single=true&range=B:E')
     soup = BeautifulSoup(r.text, 'lxml')
     tbody = soup.find('tbody')
@@ -130,7 +150,8 @@ def pull_products():
         product_upcs = tds[3].text
         rows.append((product_names, product_categories, product_details, product_upcs))
 
-    return pd.DataFrame(rows, columns=df_columns)
+    products_data = pd.DataFrame(rows, columns=df_columns)
+    return products_data
 
 ''' format_text: format the string
         text: string
