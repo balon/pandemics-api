@@ -14,17 +14,12 @@ import pandas as pd
 
 app = Flask(__name__)
 CORS(app)
+MESSAGES_FILE_PATH = "assets/scrollingMessages.txt"
 
 # supported stores to query
 supportedStores = ["walmart", "target", "lowes", "office-depot", "macys", "staples"]
 last_pull_products = None
 products_data = None
-scrolling_messages = [
-    "Want to track the pandemic while you're hunting toilet paper? Android & iOS apps are on the way. Check back soon for download links!",
-    "Want to see new features or make a suggestion? Send us a line at contacts@pandemics.live, all feedback is appreciated and reviewed in team meetings!",
-    "Click the bell icon to get notifications, wellness checks, and the occasional newsletter to see what PandeMICs! is working on next! ",
-    "Thank you for visiting PandeMICs! during our BETA. Click the side tab to see our sponsors, data sources, partners, and information about the project."
-]
 
 ''' jsonify_stores(): turn supported stores into json data
         returns: json of stores by type'''
@@ -213,6 +208,16 @@ def product_list(df, category, brand):
     
     return {"product_list": {"category": category, "brand": brand, "products": products}}
 
+''' product_list:
+        returns: json data of messages'''
+def load_messages():
+    r = open(MESSAGES_FILE_PATH, 'r')
+
+    msgs = []
+    for msg in r:
+        msgs.append(msg.strip("\n"))
+
+    return {"messages": msgs}
 
 
 ''' Flask Handling '''
@@ -244,10 +249,9 @@ def searchProducts():
 def get_products():
     return jsonify(product_details(pull_products()))
 
-
 @app.route('/getMessages')
 def get_messages():
-    return jsonify(scrolling_messages)
+    return jsonify(load_messages())
 
 
 if __name__ == "__main__":
