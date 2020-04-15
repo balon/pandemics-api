@@ -48,7 +48,11 @@ def get_locations():
 
 @resources_api.route("/v1/resources/food_banks", methods=['GET'])
 def get_food_banks():
-    """This function is used to query MongoDB to return list of food banks"""
+    """This function is used to query MongoDB to return list of food banks
+    
+        example:
+            /v1/resources/food_banks?state=CT&town=West%20Haven
+    """
 
     if len(request.args) != 2:
         return jsonify({"error": "Please use two arguments state & town"})
