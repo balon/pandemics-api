@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# $1 is the JSON file so mongo.json 
 if [ "$1" != "" ]; then
     apt update
     apt install -y mongodb
