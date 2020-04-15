@@ -12,8 +12,13 @@ from flask import jsonify
 from flask_cors import CORS
 import pandas as pd
 
+from routes.resources import resources_api
+
 app = Flask(__name__)
 CORS(app)
+
+app.register_blueprint(resources_api) # register routes from resourceAPI
+
 MESSAGES_FILE_PATH = "assets/scrollingMessages.txt"
 
 # supported stores to query
