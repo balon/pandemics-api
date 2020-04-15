@@ -18,6 +18,9 @@ app = Flask(__name__)
 app.register_blueprint(resources_api) # register routes from resourceAPI
 
 CORS(app)
+
+app.register_blueprint(resources_api) # register routes from resourceAPI
+
 MESSAGES_FILE_PATH = "assets/scrollingMessages.txt"
 
 # supported stores to query

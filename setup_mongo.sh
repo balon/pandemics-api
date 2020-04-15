@@ -1,5 +1,9 @@
 #!/bin/bash
+<<<<<<< HEAD
 
+=======
+# $1 is the JSON file so mongo.json 
+>>>>>>> resourcesAPi
 if [ "$1" != "" ]; then
     apt update
     apt install -y mongodb
